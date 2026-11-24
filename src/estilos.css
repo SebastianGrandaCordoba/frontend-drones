@@ -958,3 +958,66 @@ tr.activa td:first-child {
   color: #6b5a33;
   font-size: 13px;
 }
+
+/* ---------- Mejoras: controles del mapa y ficha del dron ---------- */
+
+.boton-mapa {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font: inherit;
+  font-size: var(--t-s);
+  font-weight: 600;
+  color: var(--tinta);
+  background: rgb(238 243 245 / 0.94);
+  border: 1px solid var(--linea);
+  border-radius: 4px;
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+}
+
+.boton-mapa:hover {
+  border-color: var(--azul);
+  color: var(--azul);
+}
+
+.estado-carga {
+  position: absolute;
+  inset: auto auto 1rem 50%;
+  transform: translateX(-50%);
+  background: var(--tinta);
+  color: var(--papel-claro);
+  padding: 0.45rem 0.9rem;
+  border-radius: 4px;
+  font-size: var(--t-s);
+}
+
+.sin-conexion p + p {
+  font-size: var(--t-s);
+  color: var(--tinta-suave);
+}
+
+.ficha-dron {
+  pointer-events: none;
+  display: grid;
+  gap: 2px;
+  min-width: 190px;
+  padding: 8px 10px;
+  font-family: var(--fuente);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--papel-claro);
+  background: var(--tinta);
+  border-radius: 4px;
+  box-shadow: 0 4px 14px rgb(27 43 52 / 0.25);
+  white-space: nowrap;
+}
+
+.ficha-dron strong {
+  font-size: 13px;
+  font-stretch: 85%;
+}
+
+.ficha-dron span {
+  color: #c3d2d9;
+}

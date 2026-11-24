@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { ErrorApi } from '../api/cliente';
 
 export function Campo({
@@ -23,8 +23,16 @@ export function Campo({
 
 export type Aviso = { tipo: 'ok' | 'error'; texto: string; detalles?: string[] } | null;
 
+/** Muestra el resultado de una acción. Las confirmaciones se ocultan solas a los 6 s; los errores se quedan. */
 export function MostrarAviso({ aviso }: { aviso: Aviso }) {
-  if (!aviso) return null;
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    setVisible(true);
+    if (aviso?.tipo !== 'ok') return;
+    const t = window.setTimeout(() => setVisible(false), 6000);
+    return () => window.clearTimeout(t);
+  }, [aviso]);
+  if (!aviso || !visible) return null;
   return (
     <div className={`aviso ${aviso.tipo}`} role={aviso.tipo === 'error' ? 'alert' : 'status'}>
       <p>{aviso.texto}</p>

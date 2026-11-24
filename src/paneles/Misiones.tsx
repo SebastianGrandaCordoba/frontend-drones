@@ -25,7 +25,7 @@ export function PanelMisiones(p: PropsPanel) {
   const accion = async (m: Mision, verbo: 'iniciar' | 'completar' | 'cancelar') => {
     try {
       const r = await api[verbo](m.id);
-      await p.op.refrescar();
+      void p.op.refrescar();
       setAviso({ tipo: 'ok', texto: `Misión ${m.id.slice(0, 8)}: ${NOMBRE_ESTADO_MISION[r.estado].toLowerCase()}.` });
     } catch (err) {
       setAviso(avisoDeError(err));
@@ -171,7 +171,7 @@ function RegistroMision(p: PropsPanel & { alRegistrar: (m: Mision) => void }) {
         destino: { latitud: Number(lat), longitud: Number(lon) },
         capacidadRequerida: Number(capacidad),
       });
-      await p.op.refrescar();
+      void p.op.refrescar();
       p.alRegistrar(m);
     } catch (err) {
       setAviso(avisoDeError(err));

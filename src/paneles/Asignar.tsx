@@ -62,8 +62,18 @@ export function PanelAsignar(p: PropsPanel) {
     try {
       const r = await api.asignar(misionId, estrategia);
       setResultado(r);
-      await p.op.refrescar();
-      if (r.asignacion) p.seleccionarDron(r.asignacion.dronId);
+      // El resultado se muestra de inmediato con la respuesta; la consola se refresca después.
+      if (r.asignacion) {
+        setDetalle({
+          misionId,
+          estadoMision: r.asignacion.estadoMision,
+          asignada: true,
+          mensaje: 'Misión con dron asignado (asignación activa)',
+          asignacion: r.asignacion,
+        });
+        p.seleccionarDron(r.asignacion.dronId);
+      }
+      void p.op.refrescar();
     } catch (err) {
       setAviso(avisoDeError(err));
     } finally {
@@ -85,7 +95,7 @@ export function PanelAsignar(p: PropsPanel) {
 
       <Campo etiqueta="Misión pendiente">
         <select value={pendiente ? misionId : ''} onChange={(e) => p.seleccionarMision(e.target.value || null)}>
-          <option value="">Elija una misión</option>
+          <option value="">{misionId && !pendiente ? 'Elija otra misión' : 'Elija una misión'}</option>
           {p.op.pendientes.map((m) => (
             <option key={m.id} value={m.id}>
               {NOMBRE_PRIORIDAD[m.prioridad]}, {NOMBRE_TIPO[m.tipo].toLowerCase()}, {m.id.slice(0, 8)}

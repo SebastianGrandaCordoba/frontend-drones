@@ -13,7 +13,7 @@ export function PanelAjustes(p: PropsPanel) {
     e.preventDefault();
     try {
       const r = await api.configurarReserva(Number(valor));
-      await p.op.refrescar();
+      void p.op.refrescar();
       setAviso({ tipo: 'ok', texto: `Reserva operativa guardada: ${r.valor} km.` });
     } catch (err) {
       setAviso(avisoDeError(err));

@@ -81,9 +81,11 @@ export function PanelFlota(p: PropsPanel) {
 
       {lista.length === 0 ? (
         <p className="vacio">
-          {p.op.drones.length === 0
-            ? 'Aún no hay drones. Registre el primero para verlo en el mapa.'
-            : 'Ningún dron coincide con el filtro.'}
+          {p.op.conectado === false
+            ? 'La flota se mostrará cuando el backend responda.'
+            : p.op.drones.length === 0
+              ? 'Aún no hay drones. Registre el primero para verlo en el mapa.'
+              : 'Ningún dron coincide con el filtro.'}
         </p>
       ) : (
         <ul className="lista">
@@ -139,7 +141,7 @@ function RegistroDron(p: PropsPanel & { alRegistrar: (d: Dron) => void }) {
         estado,
         ubicacion: { latitud: Number(lat), longitud: Number(lon) },
       });
-      await p.op.refrescar();
+      void p.op.refrescar();
       p.alRegistrar(d);
     } catch (err) {
       setAviso(avisoDeError(err));
@@ -217,7 +219,7 @@ function EditarDron(p: PropsPanel & { dron: Dron }) {
         latitud: Number(lat),
         longitud: Number(lon),
       });
-      await p.op.refrescar();
+      void p.op.refrescar();
       setAviso({ tipo: 'ok', texto: 'Datos operativos actualizados.' });
     } catch (err) {
       setAviso(avisoDeError(err));
@@ -227,7 +229,7 @@ function EditarDron(p: PropsPanel & { dron: Dron }) {
   const cambiar = async (nuevo: 'DISPONIBLE' | 'MANTENIMIENTO') => {
     try {
       await api.cambiarEstado(dron.id, nuevo);
-      await p.op.refrescar();
+      void p.op.refrescar();
       setAviso({
         tipo: 'ok',
         texto: nuevo === 'MANTENIMIENTO' ? `${dron.id} enviado a mantenimiento.` : `${dron.id} vuelve a estar disponible.`,

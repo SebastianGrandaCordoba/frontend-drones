@@ -24,6 +24,7 @@ export default function App() {
   const [misionSeleccionada, seleccionarMision] = useState<string | null>(null);
   const [claveEligiendo, setClaveEligiendo] = useState<string | null>(null);
   const alElegirPunto = useRef<((lat: number, lon: number) => void) | null>(null);
+  const [reiniciarVista, setReiniciarVista] = useState(0);
 
   const pedirPunto = useCallback((clave: string, alElegir: (lat: number, lon: number) => void) => {
     setClaveEligiendo((actual) => {
@@ -85,7 +86,7 @@ export default function App() {
           </div>
         </dl>
         <p className={`conexion ${op.conectado === false ? 'caida' : op.conectado ? 'ok' : ''}`} role="status">
-          {op.conectado === null ? 'Conectando…' : op.conectado ? 'Backend en línea' : 'Sin conexión con el backend'}
+          {op.conectado === null ? 'Conectando…' : op.conectado ? 'Backend en línea' : 'Reconectando…'}
         </p>
       </header>
 
@@ -100,6 +101,7 @@ export default function App() {
             dronSeleccionado={dronSeleccionado}
             misionSeleccionada={misionSeleccionada}
             eligiendoPunto={claveEligiendo !== null}
+            reiniciarVista={reiniciarVista}
             onSeleccionarDron={(id) => {
               seleccionarDron(id);
               setPestana('flota');
@@ -116,11 +118,22 @@ export default function App() {
             }}
           />
           {claveEligiendo && <p className="indicacion-mapa">Haga clic en el terreno para fijar la ubicación.</p>}
+          <button className="boton-mapa" onClick={() => setReiniciarVista((n) => n + 1)}>
+            Centrar vista
+          </button>
+          {op.conectado === null && <p className="estado-carga">Conectando con el backend…</p>}
           {op.conectado === false && (
             <div className="sin-conexion" role="alert">
-              <p>{op.error}</p>
+              <p>
+                <strong>Sin conexión con el backend.</strong>
+              </p>
+              <p>
+                {op.segundosSinRespuesta < 90
+                  ? `Si está desplegado en Render, el servidor puede tardar hasta un minuto en despertar. Reintentando cada 5 segundos (${op.segundosSinRespuesta} s).`
+                  : 'El servidor sigue sin responder. Revise que el backend esté en ejecución y que la dirección de la API sea correcta.'}
+              </p>
               <button className="boton" onClick={() => void op.refrescar()}>
-                Reintentar
+                Reintentar ahora
               </button>
             </div>
           )}

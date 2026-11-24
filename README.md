@@ -14,6 +14,10 @@ La mitad izquierda es una **vista 3D del espacio aéreo de Bogotá**: cada dron 
 
 Las ubicaciones se pueden escribir o **elegir haciendo clic en el mapa**.
 
+## Pruebas
+
+La interfaz se probó de punta a punta contra el backend y MongoDB: las 13 historias desde los paneles (registrar, filtrar, asignar con ambas estrategias, sin candidato, ciclo de vida e historial), la elección de ubicación en el mapa y el aviso de reconexión cuando el backend está dormido en Render.
+
 ## Tecnología
 
 React 19 · TypeScript · Vite · Three.js con React Three Fiber y Drei · tipografía Archivo.

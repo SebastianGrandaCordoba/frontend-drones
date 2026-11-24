@@ -1,9 +1,9 @@
-import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber';
+import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { Grid, Html, Line, OrbitControls, QuadraticBezierLine } from '@react-three/drei';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Color, Float32BufferAttribute, PlaneGeometry, type Group } from 'three';
 import type { Asignacion, Dron, EstadoDron, Mision } from '../api/tipos';
-import { NOMBRE_PRIORIDAD } from '../api/tipos';
+import { NOMBRE_ESTADO_DRON, NOMBRE_PRIORIDAD, NOMBRE_TIPO } from '../api/tipos';
 import { crearProyeccion, LADO_MAPA, type Proyeccion } from './proyeccion';
 
 export const COLOR = {
@@ -25,6 +25,20 @@ const COLOR_ESTADO: Record<EstadoDron, string> = {
 };
 
 const ALTURA_VUELO = 1.6;
+const POSICION_INICIAL: [number, number, number] = [0, 23, 25];
+
+/** Devuelve la cámara a la vista general cuando cambia la señal. */
+function ReiniciarCamara({ senal }: { senal: number }) {
+  const { camera, controls } = useThree();
+  useEffect(() => {
+    if (senal === 0) return;
+    camera.position.set(...POSICION_INICIAL);
+    const c = controls as unknown as { target: { set: (x: number, y: number, z: number) => void }; update: () => void } | null;
+    c?.target.set(0, 0, 0);
+    c?.update();
+  }, [senal, camera, controls]);
+  return null;
+}
 
 const reducirMovimiento =
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -41,6 +55,8 @@ interface Props {
   onSeleccionarDron: (id: string) => void;
   onSeleccionarMision: (id: string) => void;
   onElegirPunto: (latitud: number, longitud: number) => void;
+  /** Cambia de valor cada vez que el operador pide volver a la vista general. */
+  reiniciarVista: number;
 }
 
 export function Espacio3D(props: Props) {
@@ -56,7 +72,7 @@ export function Espacio3D(props: Props) {
 
   return (
     <Canvas
-      camera={{ position: [0, 21, 23], fov: 40 }}
+      camera={{ position: POSICION_INICIAL, fov: 40 }}
       dpr={[1, 2]}
       className={props.eligiendoPunto ? 'lienzo eligiendo' : 'lienzo'}
       aria-label="Vista 3D del espacio aéreo con drones y destinos de misión"
@@ -68,22 +84,13 @@ export function Espacio3D(props: Props) {
 
       <Terreno proyeccion={proyeccion} eligiendo={props.eligiendoPunto} onElegirPunto={props.onElegirPunto} />
 
-      {props.pendientes.map((m) => (
+      {/* Una sola lista con claves estables: una misión que pasa de pendiente a asignada no se vuelve a montar. */}
+      {[...props.pendientes, ...props.enCurso].map((m) => (
         <Destino
           key={m.id}
           mision={m}
           proyeccion={proyeccion}
-          activo={false}
-          seleccionado={props.misionSeleccionada === m.id}
-          onSeleccionar={props.onSeleccionarMision}
-        />
-      ))}
-      {props.enCurso.map((m) => (
-        <Destino
-          key={m.id}
-          mision={m}
-          proyeccion={proyeccion}
-          activo
+          activo={m.estado !== 'PENDIENTE'}
           seleccionado={props.misionSeleccionada === m.id}
           onSeleccionar={props.onSeleccionarMision}
         />
@@ -122,6 +129,7 @@ export function Espacio3D(props: Props) {
         maxDistance={60}
         target={[0, 0, 0]}
       />
+      <ReiniciarCamara senal={props.reiniciarVista} />
     </Canvas>
   );
 }
@@ -308,6 +316,7 @@ function DronMarcador({
 }) {
   const [x, z] = proyeccion.aEscena(dron.ubicacion);
   const cuerpo = useRef<Group>(null);
+  const [encima, setEncima] = useState(false);
   const rotores = useRef<Group>(null);
   const color = COLOR_ESTADO[dron.estado];
   const vuela = dron.estado !== 'MANTENIMIENTO';
@@ -358,12 +367,19 @@ function DronMarcador({
           e.stopPropagation();
           onSeleccionar(dron.id);
         }}
-        onPointerOver={() => (document.body.style.cursor = 'pointer')}
-        onPointerOut={() => (document.body.style.cursor = '')}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setEncima(true);
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          setEncima(false);
+          document.body.style.cursor = '';
+        }}
       >
         <mesh>
-          <boxGeometry args={[0.34, 0.1, 0.34]} />
-          <meshStandardMaterial color={COLOR.tinta} roughness={0.6} />
+          <boxGeometry args={[0.34, 0.12, 0.34]} />
+          <meshStandardMaterial color={color} roughness={0.55} />
         </mesh>
         <group ref={rotores}>
           {[
@@ -392,6 +408,20 @@ function DronMarcador({
         <span className="punto" style={{ background: color }} />
         {dron.id}
       </Html>
+      {encima && !seleccionado && (
+        <Html position={[0, altura + 1.15, 0]} center className="ficha-dron" zIndexRange={[20, 10]}>
+          <strong>
+            {dron.id}, {NOMBRE_TIPO[dron.tipo].toLowerCase()}
+          </strong>
+          <span>{NOMBRE_ESTADO_DRON[dron.estado]}</span>
+          <span>
+            Batería {dron.bateria.toFixed(0)} %, autonomía {dron.autonomiaKm} km
+          </span>
+          <span>
+            Capacidad {dron.capacidad} {dron.unidadCapacidad}
+          </span>
+        </Html>
+      )}
     </group>
   );
 }
